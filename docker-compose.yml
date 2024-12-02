@@ -25,7 +25,7 @@ services:
 
   # JAVA GATEWAY
   zabbix-java-gateway:
-    image: zabbix/zabbix-java-gateway:alpine-7.0.5
+    image: zabbix/zabbix-java-gateway:alpine-7.0.6
     container_name: zabbix-java-gateway
     ports:
       - "10052:10052"
@@ -35,7 +35,7 @@ services:
 
   # SERVIDOR ZABBIX
   zabbix-server-mysql:
-    image: zabbix/zabbix-server-mysql:alpine-7.0.5
+    image: zabbix/zabbix-server-mysql:alpine-7.0.6
     container_name: zabbix-server-mysql
     ports:
       - "10051:10051"
@@ -55,7 +55,7 @@ services:
 
    # PROXY ZABBIX
   zabbix-proxy-mysql:
-    image: zabbix/zabbix-proxy-mysql:alpine-7.0.5
+    image: zabbix/zabbix-proxy-mysql:alpine-7.0.6
     container_name: zabbix-proxy-mysql
     environment:
       DB_SERVER_HOST: "mysql-server"
@@ -69,7 +69,7 @@ services:
 
   # FRONTEND PARA ZABBIX
   zabbix-frontend-apache-mysql:
-    image: zabbix/zabbix-web-apache-mysql:alpine-7.0.5
+    image: zabbix/zabbix-web-apache-mysql:alpine-7.0.6
     container_name: zabbix-frontend-apache-mysql
     ports:
       - "8081:8080"
@@ -88,7 +88,7 @@ services:
 
   # AGENTE ZABBIX
   zabbix-agent:
-    image: zabbix/zabbix-agent:alpine-7.0.5
+    image: zabbix/zabbix-agent:alpine-7.0.6
     container_name: zabbix-agent
     environment:
       ZBX_SERVER_HOST: "zabbix-server-mysql"
@@ -99,7 +99,7 @@ services:
 
   # SNMP TRAPS
   zabbix-snmp-traps:
-    image: zabbix/zabbix-snmptraps:alpine-7.0.5
+    image: zabbix/zabbix-snmptraps:alpine-7.0.6
     container_name: zabbix-snmp-traps
     networks:
       - zabbix-net
