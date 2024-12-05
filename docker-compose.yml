@@ -1,5 +1,5 @@
 # Redes
-dnetworks:
+networks:
   zabbix-net:
     driver: bridge
 
