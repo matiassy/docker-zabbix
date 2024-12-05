@@ -1,20 +1,20 @@
-# CREAR LA RED
-networks:
+# Redes
+dnetworks:
   zabbix-net:
     driver: bridge
 
-# SERVICIOS
+# Servicios
 services:
 
-  # BASE DE DATOS
+  # Base de datos
   mysql-server:
     image: mysql:8.0
     container_name: mysql-server
     environment:
-      MYSQL_DATABASE: "zabbix"
-      MYSQL_USER: "lunix"
-      MYSQL_PASSWORD: "lunix"
-      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     networks:
       - zabbix-net
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
       - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
 
-  # JAVA GATEWAY
+  # Java Gateway
   zabbix-java-gateway:
     image: zabbix/zabbix-java-gateway:alpine-7.0.6
     container_name: zabbix-java-gateway
@@ -33,19 +33,19 @@ services:
       - zabbix-net
     restart: unless-stopped
 
-  # SERVIDOR ZABBIX
+  # Servidor Zabbix
   zabbix-server-mysql:
     image: zabbix/zabbix-server-mysql:alpine-7.0.6
     container_name: zabbix-server-mysql
     ports:
       - "10051:10051"
     environment:
-      DB_SERVER_HOST: "mysql-server"
-      MYSQL_DATABASE: "zabbix"
-      MYSQL_USER: "lunix"
-      MYSQL_PASSWORD: "lunix"
-      MYSQL_ROOT_PASSWORD: "root"
-      ZBX_JAVAGATEWAY: "zabbix-java-gateway"
+      DB_SERVER_HOST: "${DB_SERVER_HOST}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      ZBX_JAVAGATEWAY: "${ZBX_JAVAGATEWAY}"
     networks:
       - zabbix-net
     restart: unless-stopped
@@ -53,53 +53,53 @@ services:
       - mysql-server
       - zabbix-java-gateway
 
-   # PROXY ZABBIX
+  # Proxy Zabbix
   zabbix-proxy-mysql:
     image: zabbix/zabbix-proxy-mysql:alpine-7.0.6
     container_name: zabbix-proxy-mysql
     environment:
-      DB_SERVER_HOST: "mysql-server"
-      MYSQL_DATABASE: "zabbix_proxy"
-      MYSQL_USER: "lunix"
-      MYSQL_PASSWORD: "lunix"
-      MYSQL_ROOT_PASSWORD: "root"
+      DB_SERVER_HOST: "${DB_SERVER_HOST}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE_PROXY}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     networks:
       - zabbix-net
     restart: unless-stopped
 
-  # FRONTEND PARA ZABBIX
+  # Frontend para Zabbix
   zabbix-frontend-apache-mysql:
     image: zabbix/zabbix-web-apache-mysql:alpine-7.0.6
     container_name: zabbix-frontend-apache-mysql
     ports:
       - "8081:8080"
     environment:
-      ZBX_SERVER_HOST: "zabbix-server-mysql"
-      DB_SERVER_HOST: "mysql-server"
-      MYSQL_DATABASE: "zabbix"
-      MYSQL_USER: "lunix"
-      MYSQL_PASSWORD: "lunix"
-      MYSQL_ROOT_PASSWORD: "root"
+      ZBX_SERVER_HOST: "${ZBX_SERVER_HOST}"
+      DB_SERVER_HOST: "${DB_SERVER_HOST}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     networks:
       - zabbix-net
     restart: unless-stopped
     depends_on:
       - zabbix-server-mysql
 
-  # AGENTE ZABBIX
+  # Agente Zabbix
   zabbix-agent:
     image: zabbix/zabbix-agent:alpine-7.0.6
     container_name: zabbix-agent
     environment:
-      ZBX_SERVER_HOST: "zabbix-server-mysql"
-      ZBX_HOSTNAME: "zabbix-server-agent"
+      ZBX_SERVER_HOST: "${ZBX_SERVER_HOST}"
+      ZBX_HOSTNAME: "${ZBX_HOSTNAME}"
     ports:
-      - "10050:10050"      
+      - "10050:10050"
     networks:
       - zabbix-net
     restart: unless-stopped
 
-  # SNMP TRAPS
+  # SNMP Traps
   zabbix-snmp-traps:
     image: zabbix/zabbix-snmptraps:alpine-7.0.6
     container_name: zabbix-snmp-traps
