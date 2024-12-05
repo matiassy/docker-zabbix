@@ -93,6 +93,8 @@ services:
     environment:
       ZBX_SERVER_HOST: "zabbix-server-mysql"
       ZBX_HOSTNAME: "zabbix-server-agent"
+    ports:
+      - "10050:10050"      
     networks:
       - zabbix-net
     restart: unless-stopped
