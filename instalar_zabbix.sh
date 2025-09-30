@@ -1,28 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Paso 1: Iniciar solo el servicio de MySQL
-echo "Iniciando el servicio de MySQL..."
-docker-compose up -d mysql-server
+# Carga variables de .env en este shell
+export $(grep -v '^#' .env | xargs)
 
-# Esperar a que la base de datos esté lista
-echo "Esperando a que MySQL esté listo..."
-until docker exec -i mysql-server mysql -u root -proot -e "SELECT 1" > /dev/null 2>&1; do
-    echo "MySQL no está listo, esperando 5 segundos..."
-    sleep 5
+echo "[1/4] Levantando MySQL..."
+docker compose up -d mysql-server
+
+echo "[2/4] Esperando MySQL (healthcheck)..."
+# Espera al estado healthy (requiere el healthcheck del compose)
+until [ "$(docker inspect -f '{{.State.Health.Status}}' mysql-server 2>/dev/null)" = "healthy" ]; do
+  echo "  -> aún no listo, reintento en 5s..."
+  sleep 5
 done
-echo "MySQL está listo."
+echo "  -> MySQL listo."
 
-# Paso 2: Restaurar las bases de datos
-echo "Restaurando las bases de datos..."
-docker exec -i mysql-server mysql -u root -proot zabbix < 1-schema.sql
-docker exec -i mysql-server mysql -u root -proot zabbix < 2-images.sql
-docker exec -i mysql-server mysql -u root -proot zabbix < 3-data.sql
-echo "Bases de datos restauradas."
+echo "[3/4] Cargando esquema Zabbix..."
+docker exec -i mysql-server mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < 1-schema.sql
+docker exec -i mysql-server mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < 2-images.sql
+docker exec -i mysql-server mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < 3-data.sql
+echo "  -> Esquema importado."
 
-# Paso 3: Levantar el resto de los servicios
-echo "Levantando el resto de los servicios de Zabbix..."
-docker-compose up -d
-echo "Todos los servicios de Zabbix están en funcionamiento."
-
-# Fin del script
-echo "Proceso completado con éxito."
+echo "[4/4] Levantando el stack completo..."
+docker compose up -d
+echo "OK."
