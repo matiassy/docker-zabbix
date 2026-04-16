@@ -42,9 +42,13 @@ if [[ "${SCHEMA_LOADED}" -gt 0 ]]; then
   warn "[3/4] El esquema ya está cargado, omitiendo importación."
 else
   info "[3/4] Cargando esquema Zabbix..."
-  docker exec -i mysql-server mysql -u root -p"${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE}" < 1-schema.sql
-  docker exec -i mysql-server mysql -u root -p"${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE}" < 2-images.sql
-  docker exec -i mysql-server mysql -u root -p"${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE}" < 3-data.sql
+  _mysql_import() {
+    docker exec -i mysql-server mysql --force \
+      -u root -p"${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE}" 2>/dev/null
+  }
+  _mysql_import < 1-schema.sql && info "  -> 1-schema.sql OK"
+  _mysql_import < 2-images.sql && info "  -> 2-images.sql OK"
+  _mysql_import < 3-data.sql   && info "  -> 3-data.sql OK"
   info "Esquema importado correctamente."
 fi
 
