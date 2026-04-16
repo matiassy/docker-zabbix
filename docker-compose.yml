@@ -2,6 +2,9 @@ networks:
   zabbix-net:
     driver: bridge
 
+volumes:
+  snmptraps:
+
 services:
 
   # ---- MySQL (Zabbix DB) ----
@@ -29,7 +32,7 @@ services:
 
   # ---- Java Gateway ----
   zabbix-java-gateway:
-    image: zabbix/zabbix-java-gateway:alpine-7.0.18
+    image: zabbix/zabbix-java-gateway:alpine-${ZABBIX_VERSION}
     container_name: zabbix-java-gateway
     ports:
       - "10052:10052"
@@ -45,7 +48,7 @@ services:
 
   # ---- Zabbix Server ----
   zabbix-server-mysql:
-    image: zabbix/zabbix-server-mysql:alpine-7.0.18
+    image: zabbix/zabbix-server-mysql:alpine-${ZABBIX_VERSION}
     container_name: zabbix-server-mysql
     ports:
       - "10051:10051"
@@ -61,6 +64,8 @@ services:
         condition: service_healthy
       zabbix-java-gateway:
         condition: service_healthy
+    volumes:
+      - snmptraps:/var/lib/zabbix/snmptraps:ro
     healthcheck:
       test: ["CMD-SHELL", "bash -lc '</dev/tcp/127.0.0.1/10051'"]
       interval: 10s
@@ -71,7 +76,7 @@ services:
 
   # ---- Zabbix Proxy (MySQL) ----
   zabbix-proxy-mysql:
-    image: zabbix/zabbix-proxy-mysql:alpine-7.0.18
+    image: zabbix/zabbix-proxy-mysql:alpine-${ZABBIX_VERSION}
     container_name: zabbix-proxy-mysql
     environment:
       DB_SERVER_HOST: "${DB_SERVER_HOST}"
@@ -92,7 +97,7 @@ services:
 
   # ---- Frontend Web (Apache + PHP) ----
   zabbix-frontend-apache-mysql:
-    image: zabbix/zabbix-web-apache-mysql:alpine-7.0.18
+    image: zabbix/zabbix-web-apache-mysql:alpine-${ZABBIX_VERSION}
     container_name: zabbix-frontend-apache-mysql
     ports:
       - "8081:8080"
@@ -103,7 +108,7 @@ services:
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
-      PHP_TZ: "${PHP_TZ:-America/Argentina/Buenos_Aires}"
+      PHP_TZ: "${PHP_TZ}"
     depends_on:
       zabbix-server-mysql:
         condition: service_healthy
@@ -117,7 +122,7 @@ services:
 
   # ---- Agente ----
   zabbix-agent:
-    image: zabbix/zabbix-agent:alpine-7.0.18
+    image: zabbix/zabbix-agent:alpine-${ZABBIX_VERSION}
     container_name: zabbix-agent
     ports:
       - "10050:10050"
@@ -137,11 +142,13 @@ services:
 
   # ---- SNMP Traps ----
   zabbix-snmp-traps:
-    image: zabbix/zabbix-snmptraps:alpine-7.0.18
+    image: zabbix/zabbix-snmptraps:alpine-${ZABBIX_VERSION}
     container_name: zabbix-snmp-traps
     depends_on:
       zabbix-server-mysql:
         condition: service_healthy
+    volumes:
+      - snmptraps:/var/lib/zabbix/snmptraps
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f snmptrapd >/dev/null || exit 1"]
       interval: 15s
